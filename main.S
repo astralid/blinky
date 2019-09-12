@@ -25,18 +25,20 @@ _start:
 	strh r3, [r2]
 	ldr r6, [r2]
 
-	add r2, r2, #0x14	@ GPIOA_ODR
-	ldr r3, =0x20		@ PA5 high
-	strb r3, [r2]
-	ldr r5, [r2]
-	
-	
-	
 loo:
-	add R0, R0, #1
-	cmp r0, r1
-	beq hang
+	@ if button pressed, led high
+	@ else led low
+
+	ldr r2, =0x50000010	@ GPIOA_IDR
+	ldr r3, [r2]
+	mov r4, #1
+	ldr r2, =0x50000014	@ GPIOA_ODR
+	and r4, r3		@ PA5 low (or not)
+beq lo				@ branch if Z flag set
+	mov r4, #0x20		@ PA5 high
+lo:	strb r4, [r2]
 b loo
+
 nop
 .hword 0x2701
 hang:	b .
