@@ -1,0 +1,169 @@
+#define  GDE021A1_EPD_PIXEL_WIDTH    ((uint16_t)172)
+#define  GDE021A1_EPD_PIXEL_HEIGHT   ((uint16_t)18)
+
+/**
+  * @brief  GDE021A1 Registers
+  */
+#define EPD_REG_0             0x00   /* Status Read */
+#define EPD_REG_1             0x01   /* Driver Output Control */
+#define EPD_REG_3             0x03   /* Gate driving voltage control */
+#define EPD_REG_4             0x04   /* Source driving coltage control */
+#define EPD_REG_7             0x07   /* Display Control */
+#define EPD_REG_11            0x0B   /* Gate and Sorce non overlap period COntrol */
+#define EPD_REG_15            0x0F   /* Gate scan start */
+#define EPD_REG_16            0x10   /* Deep Sleep mode setting */
+#define EPD_REG_17            0x11   /* Data Entry Mode Setting */
+#define EPD_REG_18            0x12   /* SWRESET */
+#define EPD_REG_26            0x1A   /* Temperature Sensor Control (Write to Temp Register) */
+#define EPD_REG_27            0x1B   /* Temperature Sensor Control(Read from Temp Register) */
+#define EPD_REG_28            0x1C   /* Temperature Sensor Control(Write Command  to Temp sensor) */
+#define EPD_REG_29            0x1D   /* Temperature Sensor Control(Load temperature register with temperature sensor reading) */
+#define EPD_REG_32            0x20   /* Master activation */
+#define EPD_REG_33            0x21   /* Display update */
+#define EPD_REG_34            0x22   /* Display update control 2 */
+#define EPD_REG_36            0x24   /* write RAM */
+#define EPD_REG_37            0x25   /* Read RAM */
+#define EPD_REG_40            0x28   /* VCOM sense */
+#define EPD_REG_41            0x29   /* VCOM Sense duration */
+#define EPD_REG_42            0x2A   /* VCOM OTP program */
+#define EPD_REG_44            0x2C   /* Write VCOMregister */
+#define EPD_REG_45            0x2D   /* Read OTP registers */
+#define EPD_REG_48            0x30   /* Program WS OTP */
+#define EPD_REG_50            0x32   /* Write LUT register */
+#define EPD_REG_51            0x33   /* Read LUT register */
+#define EPD_REG_54            0x36   /* Program OTP selection */
+#define EPD_REG_55            0x37   /* Proceed OTP selection */
+#define EPD_REG_58            0x3A   /* Set dummy line pulse period */
+#define EPD_REG_59            0x3B   /* Set Gate line width */
+#define EPD_REG_60            0x3C   /* Select Border waveform */
+#define EPD_REG_68            0x44   /* Set RAM X - Address Start / End Position */
+#define EPD_REG_69            0x45   /* Set RAM Y - Address Start / End Position */
+#define EPD_REG_78            0x4E   /* Set RAM X Address Counter */
+#define EPD_REG_79            0x4F   /* Set RAM Y Address Counter */
+#define EPD_REG_240           0xF0   /* Booster Set Internal Feedback Selection */
+#define EPD_REG_255           0xFF   /* NOP */
+
+/* Look-up table for the epaper (90 bytes) */
+const unsigned char WF_LUT[]={
+  0x82,0x00,0x00,0x00,0xAA,0x00,0x00,0x00,
+  0xAA,0xAA,0x00,0x00,0xAA,0xAA,0xAA,0x00,
+  0x55,0xAA,0xAA,0x00,0x55,0x55,0x55,0x55,
+  0xAA,0xAA,0xAA,0xAA,0x55,0x55,0x55,0x55,
+  0xAA,0xAA,0xAA,0xAA,0x15,0x15,0x15,0x15,
+  0x05,0x05,0x05,0x05,0x01,0x01,0x01,0x01,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+  0x41,0x45,0xF1,0xFF,0x5F,0x55,0x01,0x00,
+  0x00,0x00,};
+
+// Constructor
+EPD_GDE021A1::EPD_GDE021A1(PinName cs, PinName dc, PinName rst, PinName bsy, PinName pwr, PinName spi_mosi, PinName spi_miso, PinName spi_sck) :
+  _cs(cs, 1),
+  _dc(dc, 1),
+  _rst(rst, 1),
+  _bsy(bsy, PullDown),
+  _pwr(pwr, 1),
+  _spi(spi_mosi, spi_miso, spi_sck)
+{  
+  _pwr = 0;
+  _cs = 0;
+  _cs = 1;
+  _rst = 1;
+  
+  wait_ms(10);
+  
+  _spi.format(8);
+  _spi.frequency(1000000);
+  
+  gde021a1_Init();
+  
+  Clear(EPD_COLOR_WHITE);
+  
+  SetFont(&Font12);
+}
+
+
+
+
+
+void EPD_GDE021A1::EPD_IO_WriteData(uint16_t RegValue)
+{
+  _cs = 0;
+  _dc = 1;
+  _spi.write(RegValue);
+  _cs = 1;
+}
+
+void EPD_GDE021A1::EPD_IO_WriteReg(uint8_t Reg)
+{
+  _cs = 0;
+  _dc = 0;
+  _spi.write(Reg);
+  _cs = 1;
+}
+
+uint16_t EPD_GDE021A1::EPD_IO_ReadData(void)
+{
+  _cs = 0;
+  _cs = 1;
+  return _spi.write(0xFF);
+}
+
+
+
+
+
+void EPD_GDE021A1::gde021a1_Init(void)
+{
+  uint8_t nb_bytes = 0;
+  
+  EPD_IO_WriteReg(EPD_REG_16);  /* Deep sleep mode disable */
+  EPD_IO_WriteData(0x00);
+  EPD_IO_WriteReg(EPD_REG_17);  /* Data Entry Mode Setting */
+  EPD_IO_WriteData(0x03);
+  EPD_IO_WriteReg(EPD_REG_68);  /* Set the RAM X start/end address */
+  EPD_IO_WriteData(0x00);       /* RAM X address start = 00h */
+  EPD_IO_WriteData(0x11);       /* RAM X adress end = 11h (17 * 4pixels by address = 72 pixels) */
+  EPD_IO_WriteReg(EPD_REG_69);  /* Set the RAM Y start/end address */
+  EPD_IO_WriteData(0x00);       /* RAM Y address start = 0 */
+  EPD_IO_WriteData(0xAB);       /* RAM Y adress end = 171 */
+  EPD_IO_WriteReg(EPD_REG_78);  /* Set RAM X Address counter */
+  EPD_IO_WriteData(0x00);
+  EPD_IO_WriteReg(EPD_REG_79);  /* Set RAM Y Address counter */
+  EPD_IO_WriteData(0x00);
+  EPD_IO_WriteReg(EPD_REG_240); /* Booster Set Internal Feedback Selection */
+  EPD_IO_WriteData(0x1F);
+  EPD_IO_WriteReg(EPD_REG_33);  /* Disable RAM bypass and set GS transition to GSA = GS0 and GSB = GS3 */
+  EPD_IO_WriteData(0x03);
+  EPD_IO_WriteReg(EPD_REG_44);  /* Write VCOMregister */
+  EPD_IO_WriteData(0xA0);
+  EPD_IO_WriteReg(EPD_REG_60);  /* Border waveform */
+  EPD_IO_WriteData(0x64);
+  EPD_IO_WriteReg(EPD_REG_50);  /* Write LUT register */
+  
+  for (nb_bytes=0; nb_bytes<90; nb_bytes++)
+  {
+    EPD_IO_WriteData(WF_LUT[nb_bytes]);
+  } 
+}
+
+
+
+
+
+void EPD_GDE021A1::Clear(uint16_t Color)
+{
+  uint32_t index = 0;
+
+  gde021a1_SetDisplayWindow(0, 0, 171, 17);
+
+  for(index = 0; index < 3096; index++)
+  {
+      gde021a1_WritePixel(Color);
+  }
+}
+
+
+
