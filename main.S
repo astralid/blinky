@@ -41,12 +41,10 @@ _start:
 	ldr r3, [r2]
 	add r3, r3, #1		@ enable port A clock
 	strb r3, [r2]
-	ldr r7, [r2]
 
 	ldr r2, =0x50000000	@ GPIOA_MODER
 	ldr r3, =GPIOA_MODER_PA0IN_PA5OUT
 	strh r3, [r2]
-	ldr r6, [r2]
 
 loo:
 	@ if button pressed, led high
@@ -65,3 +63,25 @@ b loo
 nop
 .hword AAA
 hang:	b .
+
+
+/*
+@ 7.3 RCC registers p.186
+.set	_RCC_IOPENR	0x3		@ A,B clock enable
+.set	_RCC_APB2ENR	0x1000		@ enable SPI1 clock
+
+@ 9.3.2 I/O pin alternate function multiplexer and mapping p.239
+@ 9.4 GPIO registers p.245
+@ MODER: 00in 01out 10af 11analog(def)
+.set	_GPIOA_MODER	0x6bfcfcfc	@ cs=01,bsy=00,btn=00
+.set	_GPIOB_MODER	0xff5ffb9f	@ dc=01,pwr=01,mosi=10,sck=10,rst=01
+.set	_GPIOA_PUPDR	0x24020000	@ bsy=10pd
+.set	_GPIOB_AFRL	0x0		@ B3sck,B5mosi =AF0
+.set	_GPIOB_OTYPER	0x0		@ B3sck,B5mosi =push-pull
+.set	_GPIOB_OSPEEDR	0x202000	@ B5mosi,B3sck =10hs
+
+@ 31.3.7 SPI configuration p.877
+@ 31.7 SPI registers p.906
+.set	_SPI_CR1	0x00001010	@ 8b, SSM=0hwNSS, LSB=0,SPE=1, BR=0,MSTR=1, CPOL=0,CPHA=0
+.set	_SPI_CR2	0x00000010	@ SSOE=1hwNSS
+*/
