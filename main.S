@@ -39,6 +39,4 @@ beq lo				@ branch if Z flag set
 lo:	strb r4, [r2]
 b loo
 
-nop
-.hword 0x2701
 hang:	b .

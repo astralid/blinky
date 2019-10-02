@@ -12,6 +12,7 @@ main.bin: main.elf
 
 dis:
 	arm-none-eabi-objdump -d main.o
+#	arm-none-eabi-objdump -D -b binary -m armv6-m -M force-thumb -EL main.bin | less
    
 deb:
 	arm-none-eabi-gdb main.elf -ex 'tar ext :4242' -ex load
