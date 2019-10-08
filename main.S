@@ -66,6 +66,19 @@ hang:	b .
 
 
 /*
+ldr immediate pc relative?
+ldm	r8, {r0,r1,r2,r3}
+ldm	r9, {r4,r5,r6,r7}
+
+.set	GPIOA_MODER	0x50000000
+.set	GPIOA_PUPDR	0x5000000c
+.set	GPIOB_MODER	0x50000400
+.set	GPIOB_OSPEEDR	0x50000408
+.set	RCC_IOPENR	0x4002102c
+.set	RCC_APB2ENR	0x40021034
+.set	SPI1_CR1	0x40013000
+.set	SPI1_CR2	0x40013004
+
 @ 7.3 RCC registers p.186
 .set	_RCC_IOPENR	0x3		@ A,B clock enable
 .set	_RCC_APB2ENR	0x1000		@ enable SPI1 clock
@@ -73,11 +86,11 @@ hang:	b .
 @ 9.3.2 I/O pin alternate function multiplexer and mapping p.239
 @ 9.4 GPIO registers p.245
 @ MODER: 00in 01out 10af 11analog(def)
-.set	_GPIOA_MODER	0x6bfcfcfc	@ cs=01,bsy=00,btn=00
+.set	_GPIOA_MODER	0xabfcfcfc	@ A15cs=10,bsy=00,btn=00
 .set	_GPIOB_MODER	0xff5ffb9f	@ dc=01,pwr=01,mosi=10,sck=10,rst=01
 .set	_GPIOA_PUPDR	0x24020000	@ bsy=10pd
-.set	_GPIOB_AFRL	0x0		@ B3sck,B5mosi =AF0
-.set	_GPIOB_OTYPER	0x0		@ B3sck,B5mosi =push-pull
+.set	_GPIOB_AFRL	0x0		@ 0def; B3sck,B5mosi =AF0
+.set	_GPIOB_OTYPER	0x0		@ 0def; B3sck,B5mosi =push-pull
 .set	_GPIOB_OSPEEDR	0x202000	@ B5mosi,B3sck =10hs
 
 @ 31.3.7 SPI configuration p.877
